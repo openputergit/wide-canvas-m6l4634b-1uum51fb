@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Check ERD Diagram Creator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .entity {
+            cursor: move;
+            user-select: none;
+        }
+        .relationship-line {
+            pointer-events: none;
+        }
+        #canvas {
+            position: relative;
+            overflow: hidden;
+        }
+        .field {
+            transition: background-color 0.3s;
+        }
+        .field:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-4">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h1 class="text-3xl font-bold mb-4 text-blue-600">Health Check System ERD</h1>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="canvas">
+                <!-- User Entity -->
+                <div class="entity bg-blue-50 p-4 rounded-lg border-2 border-blue-200" draggable="true" data-entity="user">
+                    <h2 class="text-xl font-bold mb-2 text-blue-700">User</h2>
+                    <div class="field p-1"><i class="bi bi-key-fill text-yellow-500"></i> id (PK)</div>
+                    <div class="field p-1">username</div>
+                    <div class="field p-1">email</div>
+                    <div class="field p-1">password</div>
+                    <div class="field p-1">name</div>
+                    <div class="field p-1">role (enum: admin, team_leader, engineer)</div>
+                </div>
+
+                <!-- Team Entity -->
+                <div class="entity bg-green-50 p-4 rounded-lg border-2 border-green-200" draggable="true" data-entity="team">
+                    <h2 class="text-xl font-bold mb-2 text-green-700">Team</h2>
+                    <div class="field p-1"><i class="bi bi-key-fill text-yellow-500"></i> id (PK)</div>
+                    <div class="field p-1">name</div>
+                    <div class="field p-1">created_at</div>
+                </div>
+
+                <!-- HealthCard Entity -->
+                <div class="entity bg-purple-50 p-4 rounded-lg border-2 border-purple-200" draggable="true" data-entity="health_card">
+                    <h2 class="text-xl font-bold mb-2 text-purple-700">HealthCard</h2>
+                    <div class="field p-1"><i class="bi bi-key-fill text-yellow-500"></i> id (PK)</div>
+                    <div class="field p-1">title</div>
+                    <div class="field p-1">description</div>
+                </div>
+
+                <!-- Session Entity -->
+                <div class="entity bg-red-50 p-4 rounded-lg border-2 border-red-200" draggable="true" data-entity="session">
+                    <h2 class="text-xl font-bold mb-2 text-red-700">Session</h2>
+                    <div class="field p-1"><i class="bi bi-key-fill text-yellow-500"></i> id (PK)</div>
+                    <div class="field p-1">date</div>
+                    <div class="field p-1">status</div>
+                </div>
+
+                <!-- Vote Entity -->
+                <div class="entity bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200" draggable="true" data-entity="vote">
+                    <h2 class="text-xl font-bold mb-2 text-yellow-700">Vote</h2>
+                    <div class="field p-1"><i class="bi bi-key-fill text-yellow-500"></i> id (PK)</div>
+                    <div class="field p-1"><i class="bi bi-key"></i> user_id (FK)</div>
+                    <div class="field p-1"><i class="bi bi-key"></i> session_id (FK)</div>
+                    <div class="field p-1"><i class="bi bi-key"></i> health_card_id (FK)</div>
+                    <div class="field p-1"><i class="bi bi-key"></i> team_id (FK)</div>
+                    <div class="field p-1">status (enum: green, amber, red)</div>
+                    <div class="field p-1">progress_note</div>
+                    <div class="field p-1">created_at</div>
+                    <div class="field p-1">updated_at</div>
+                </div>
+
+                <!-- TeamMember Entity -->
+                <div class="entity bg-indigo-50 p-4 rounded-lg border-2 border-indigo-200" draggable="true" data-entity="team_member">
+                    <h2 class="text-xl font-bold mb-2 text-indigo-700">TeamMember</h2>
+                    <div class="field p-1"><i class="bi bi-key-fill text-yellow-500"></i> id (PK)</div>
+                    <div class="field p-1"><i class="bi bi-key"></i> user_id (FK)</div>
+                    <div class="field p-1"><i class="bi bi-key"></i> team_id (FK)</div>
+                    <div class="field p-1">joined_at</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relationships Legend -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Relationships</h2>
+            <ul class="space-y-2">
+                <li><span class="font-bold">User ↔ Team:</span> Many-to-Many (through TeamMember)</li>
+                <li><span class="font-bold">User ↔ Vote:</span> One-to-Many</li>
+                <li><span class="font-bold">Team ↔ Vote:</span> One-to-Many</li>
+                <li><span class="font-bold">HealthCard ↔ Vote:</span> One-to-Many</li>
+                <li><span class="font-bold">Session ↔ Vote:</span> One-to-Many</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Make entities draggable
+        document.querySelectorAll('.entity').forEach(entity => {
+            entity.addEventListener('dragstart', e => {
+                e.dataTransfer.setData('text/plain', e.target.dataset.entity);
+            });
+
+            entity.addEventListener('dragend', e => {
+                e.preventDefault();
+            });
+        });
+
+        // Allow dropping entities
+        document.getElementById('canvas').addEventListener('dragover', e => {
+            e.preventDefault();
+        });
+
+        document.getElementById('canvas').addEventListener('drop', e => {
+            e.preventDefault();
+            const entityId = e.dataTransfer.getData('text/plain');
+            const entity = document.querySelector(`[data-entity="${entityId}"]`);
+            
+            // Update position based on drop coordinates
+            const rect = e.target.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            entity.style.position = 'absolute';
+            entity.style.left = `${x}px`;
+            entity.style.top = `${y}px`;
+        });
+
+        // Add hover effect to show relationships
+        document.querySelectorAll('.entity').forEach(entity => {
+            entity.addEventListener('mouseenter', e => {
+                const entityType = e.target.dataset.entity;
+                document.querySelectorAll('.field').forEach(field => {
+                    if (field.textContent.includes(`${entityType}_id`)) {
+                        field.classList.add('bg-yellow-100');
+                    }
+                });
+            });
+
+            entity.addEventListener('mouseleave', e => {
+                document.querySelectorAll('.field').forEach(field => {
+                    field.classList.remove('bg-yellow-100');
+                });
+            });
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
